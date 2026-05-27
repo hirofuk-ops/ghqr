@@ -356,7 +356,7 @@ Thanks to everyone who has contributed!
 </a>
 
 ## Acknowledgements
-[Azure DevOps Quick Review](https://github.com/microsoft/adoqr) - a dedicated tool for Azure DevOps - inspired the creation of GitHub Quick Review.
+[Azure DevOps Quick Review](https://github.com/microsoft/adoqr) - a dedicated tool for Azure DevOps inspired by GitHub Quick Review (ghqr).
 
 ## Code of Conduct
 

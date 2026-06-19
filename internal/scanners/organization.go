@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 
@@ -138,7 +139,7 @@ func (o *OrganizationScanner) scanSecurityAlerts(ctx context.Context) (*OrgSecur
 	for {
 		depURL := fmt.Sprintf("orgs/%s/dependabot/alerts?state=open&per_page=100", o.org)
 		if after != "" {
-			depURL += "&after=" + after
+			depURL += "&after=" + url.QueryEscape(after)
 		}
 		depReq, err := o.client.NewRequest("GET", depURL, nil)
 		if err != nil {

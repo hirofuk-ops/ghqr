@@ -64,6 +64,9 @@ func TestScanSecurityAlerts_PaginatesAllPages(t *testing.T) {
 			t.Fatalf("unexpected dependabot after cursor: %q", after)
 		case strings.HasSuffix(r.URL.Path, pathPrefix+"/code-scanning/alerts"):
 			page := r.URL.Query().Get("page")
+			if page == "" {
+				t.Fatalf("code-scanning request missing page query: %s", r.URL.String())
+			}
 			if page == "1" {
 				w.Header().Set("Link", `<http://example.test?page=2>; rel="next"`)
 				writeEmptyObjects(t, w, 100)
@@ -75,6 +78,9 @@ func TestScanSecurityAlerts_PaginatesAllPages(t *testing.T) {
 			}
 		case strings.HasSuffix(r.URL.Path, pathPrefix+"/secret-scanning/alerts"):
 			page := r.URL.Query().Get("page")
+			if page == "" {
+				t.Fatalf("secret-scanning request missing page query: %s", r.URL.String())
+			}
 			if page == "1" {
 				w.Header().Set("Link", `<http://example.test?page=2>; rel="next"`)
 				writeEmptyObjects(t, w, 100)

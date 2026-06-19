@@ -134,9 +134,13 @@ func (o *OrganizationScanner) scanSecurityAlerts(ctx context.Context) (*OrgSecur
 	}
 
 	var dependabotAlerts []dependabotAlert
-	for page := 1; ; {
-		depReq, err := o.client.NewRequest("GET",
-			fmt.Sprintf("orgs/%s/dependabot/alerts?state=open&per_page=100&page=%d", o.org, page), nil)
+	after := ""
+	for {
+		depURL := fmt.Sprintf("orgs/%s/dependabot/alerts?state=open&per_page=100", o.org)
+		if after != "" {
+			depURL += "&after=" + after
+		}
+		depReq, err := o.client.NewRequest("GET", depURL, nil)
 		if err != nil {
 			break
 		}
@@ -159,10 +163,10 @@ func (o *OrganizationScanner) scanSecurityAlerts(ctx context.Context) (*OrgSecur
 				result.HighDependabot++
 			}
 		}
-		if depResp == nil || depResp.NextPage == 0 {
+		if depResp == nil || depResp.After == "" {
 			break
 		}
-		page = depResp.NextPage
+		after = depResp.After
 	}
 
 	// Code scanning alerts.

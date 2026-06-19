@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -42,23 +41,18 @@ func TestScanSecurityAlerts_PaginatesAllPages(t *testing.T) {
 			t.Fatalf("per_page query = %q, want 100", r.URL.Query().Get("per_page"))
 		}
 
-		page := 1
-		if s := r.URL.Query().Get("page"); s != "" {
-			p, err := strconv.Atoi(s)
-			if err != nil {
-				t.Fatalf("invalid page query %q: %v", s, err)
-			}
-			page = p
-		}
-
 		switch {
 		case strings.HasSuffix(r.URL.Path, pathPrefix+"/dependabot/alerts"):
-			if page == 1 {
-				w.Header().Set("Link", `<http://example.test?page=2>; rel="next"`)
+			if r.URL.Query().Get("page") != "" {
+				t.Fatalf("dependabot request unexpectedly used page query: %s", r.URL.String())
+			}
+			after := r.URL.Query().Get("after")
+			if after == "" {
+				w.Header().Set("Link", `<http://example.test?after=cursor-2>; rel="next"`)
 				writeDependabotAlerts(t, w, 100, "critical")
 				return
 			}
-			if page == 2 {
+			if after == "cursor-2" {
 				w.Header().Set("Content-Type", "application/json")
 				_ = json.NewEncoder(w).Encode([]map[string]any{
 					{"security_advisory": map[string]string{"severity": "high"}},
@@ -67,28 +61,31 @@ func TestScanSecurityAlerts_PaginatesAllPages(t *testing.T) {
 				})
 				return
 			}
+			t.Fatalf("unexpected dependabot after cursor: %q", after)
 		case strings.HasSuffix(r.URL.Path, pathPrefix+"/code-scanning/alerts"):
-			if page == 1 {
+			page := r.URL.Query().Get("page")
+			if page == "1" {
 				w.Header().Set("Link", `<http://example.test?page=2>; rel="next"`)
 				writeEmptyObjects(t, w, 100)
 				return
 			}
-			if page == 2 {
+			if page == "2" {
 				writeEmptyObjects(t, w, 12)
 				return
 			}
 		case strings.HasSuffix(r.URL.Path, pathPrefix+"/secret-scanning/alerts"):
-			if page == 1 {
+			page := r.URL.Query().Get("page")
+			if page == "1" {
 				w.Header().Set("Link", `<http://example.test?page=2>; rel="next"`)
 				writeEmptyObjects(t, w, 100)
 				return
 			}
-			if page == 2 {
+			if page == "2" {
 				w.Header().Set("Link", `<http://example.test?page=3>; rel="next"`)
 				writeEmptyObjects(t, w, 50)
 				return
 			}
-			if page == 3 {
+			if page == "3" {
 				writeEmptyObjects(t, w, 1)
 				return
 			}
